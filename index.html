@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6bcb"><title>선상낚시 빈자리 통합조회</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+header{background:#0b6bcb;color:#fff;padding:22px 16px 18px;position:sticky;top:0;z-index:5}h1{font-size:22px;margin:0 0 5px}.sub{font-size:13px;opacity:.9}
+main{max-width:760px;margin:auto;padding:12px}.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px #0000000b}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:9px}label{font-size:12px;color:#667085;display:block;margin-bottom:5px}
+select,input{width:100%;height:43px;border:1px solid #d9dee5;border-radius:10px;padding:0 10px;background:#fff;font-size:14px}
+.full{grid-column:1/-1}.search{width:100%;height:48px;border:0;border-radius:11px;background:#0b6bcb;color:#fff;font-size:16px;font-weight:700;margin-top:10px}
+.summary{display:flex;justify-content:space-between;align-items:center}.count{font-weight:700}.updated{font-size:11px;color:#8a94a3}
+.result{border:1px solid #e5e9ef;border-radius:14px;padding:13px;margin-top:10px}.top{display:flex;justify-content:space-between;gap:8px}
+.boat{font-weight:800;font-size:17px}.badge{font-size:11px;padding:5px 7px;border-radius:20px;background:#e9f7ef;color:#087443;white-space:nowrap}
+.meta{font-size:13px;color:#59636f;margin:7px 0}.seats{font-size:20px;font-weight:800;color:#e44b2f}.small{font-size:12px;color:#7a8490}
+.actions{display:flex;gap:8px;margin-top:10px}.actions a{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:9px;font-size:13px;font-weight:700}
+.reserve{background:#0b6bcb;color:white}.source{background:#eef2f6;color:#374151}.notice{font-size:12px;line-height:1.55;color:#697586}
+.empty{padding:28px 8px;text-align:center;color:#7b8490}@media(max-width:430px){.filters{grid-template-columns:1fr}.full{grid-column:auto}}
+</style></head><body>
+<header><h1>🎣 선상낚시 빈자리 통합조회</h1><div class="sub">더피싱 + 선상24 · 빈자리 확인 후 원래 예약사이트로 이동</div></header>
+<main><section class="card"><div class="filters">
+<div><label>출항일</label><input id="date" type="date"></div>
+<div><label>필요한 자리</label><select id="people"><option value="1">1명</option><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option></select></div>
+<div><label>지역</label><select id="region"><option>전체</option><option>무창포</option><option>오천항</option><option>대천</option><option>군산</option><option>여수</option><option>고흥</option><option>남해</option></select></div>
+<div><label>어종</label><select id="fish"><option>전체</option><option>주꾸미</option><option>갑오징어</option><option>주꾸미·갑오징어</option><option>문어</option><option>광어</option><option>참돔</option></select></div>
+<div class="full"><label>출처</label><select id="source"><option>전체</option><option>선상24</option><option>더피싱</option></select></div>
+</div><button class="search" id="searchBtn" type="button">빈자리 검색</button></section>
+<section class="card"><div class="summary"><div class="count" id="count">검색 결과 0건</div><div class="updated" id="updated">조회 전</div></div><div id="results"></div></section>
+<section class="card notice"><b>안내</b><br>현재는 화면과 검색 기능을 먼저 구현한 1차 버전입니다. 실제 빈자리 데이터는 각 플랫폼의 허용된 연동 방식이 확인되면 서버에서 받아오도록 연결할 수 있습니다.</section>
+</main>
+<script>
+const DATA=[
+{date:"2026-09-13",region:"무창포",boat:"뉴아폴로호",fish:"주꾸미·갑오징어",seats:0,status:"대기",source:"선상24",url:"https://apollo.sunsang24.com/ship/schedule_fleet/0"},
+{date:"2026-09-13",region:"무창포",boat:"샘플호",fish:"주꾸미·갑오징어",seats:1,status:"예약가능",source:"더피싱",url:"https://thefishing.kr/"},
+{date:"2026-09-13",region:"오천항",boat:"샘플호A",fish:"주꾸미·갑오징어",seats:2,status:"예약가능",source:"선상24",url:"https://www.sunsang24.com/"},
+{date:"2026-09-14",region:"무창포",boat:"샘플호B",fish:"주꾸미·갑오징어",seats:4,status:"예약가능",source:"선상24",url:"https://www.sunsang24.com/"},
+{date:"2026-09-19",region:"고흥",boat:"나로도 뉴다온호",fish:"문어",seats:16,status:"예약가능",source:"선상24",url:"https://newdaon.sunsang24.com/ship/schedule_fleet/"},
+{date:"2026-10-01",region:"고흥",boat:"나로도 뉴다온호",fish:"주꾸미·갑오징어",seats:21,status:"예약가능",source:"선상24",url:"https://newdaon.sunsang24.com/ship/schedule_fleet/202610"},
+{date:"2026-10-02",region:"고흥",boat:"나로도 뉴다온호",fish:"주꾸미·갑오징어",seats:16,status:"예약가능",source:"선상24",url:"https://newdaon.sunsang24.com/ship/schedule_fleet/202610"}];
+const $=id=>document.getElementById(id);
+function render(){let d=$("date").value,p=+$("people").value,r=$("region").value,f=$("fish").value,s=$("source").value;
+let rows=DATA.filter(x=>(!d||x.date===d)&&(r==="전체"||x.region===r)&&(f==="전체"||x.fish.includes(f))&&(s==="전체"||x.source===s)&&x.seats>=p);
+rows.sort((a,b)=>a.seats-b.seats||a.date.localeCompare(b.date));$("count").textContent=`검색 결과 ${rows.length}건`;
+$("updated").textContent="마지막 조회: "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+$("results").innerHTML=rows.length?rows.map(x=>`<div class="result"><div class="top"><div class="boat">${x.boat}</div><div class="badge">${x.source}</div></div><div class="meta">${x.date} · ${x.region} · ${x.fish}</div><div><span class="seats">${x.seats}석</span> <span class="small">남은자리 · ${x.status}</span></div><div class="actions"><a class="reserve" href="${x.url}" target="_blank" rel="noopener">예약사이트 열기</a><a class="source" href="${x.url}" target="_blank" rel="noopener">${x.source} 보기</a></div></div>`).join(""):`<div class="empty">조건에 맞는 빈자리가 없습니다.</div>`}
+$("searchBtn").addEventListener("click",render);$("date").value="2026-09-13";render();
+</script></body></html>
